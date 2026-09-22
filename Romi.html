@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>¿Aceptas mis Flores Amarillas? 🌻✨</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: radial-gradient(circle at center, #fffde7 0%, #fff999 50%, #fbc02d 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+    }
+
+    .font-romantic {
+      font-family: 'Dancing Script', cursive;
+    }
+
+    /* Animaciones de flotación y destellos */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(2deg); }
+    }
+
+    .animate-float {
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .sparkle {
+      position: absolute;
+      pointer-events: none;
+      animation: pulseSparkle 2s ease-in-out infinite;
+    }
+
+    @keyframes pulseSparkle {
+      0%, 100% { opacity: 0.3; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* Botón travieso "No" con suave transición de movimiento */
+    #btn-no {
+      position: absolute;
+      transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 50;
+      touch-action: manipulation;
+    }
+
+    /* ANIMACIÓN SVG DE LA FLOR PASO A PASO */
+    .flower-pot {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 1s ease-out;
+    }
+    .flower-pot.grow {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .flower-stem {
+      stroke-dasharray: 200;
+      stroke-dashoffset: 200;
+      transition: stroke-dashoffset 1.5s ease-in-out;
+    }
+    .flower-stem.grow {
+      stroke-dashoffset: 0;
+    }
+
+    .flower-leaf {
+      transform: scale(0);
+      transform-origin: center;
+      transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .flower-leaf.grow {
+      transform: scale(1);
+    }
+
+    /* PÉTALOS CON TRANSICIÓN INDIVIDUAL */
+    .flower-petal {
+      transform: scale(0);
+      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .flower-center {
+      transform: scale(0);
+      transform-origin: 150px 140px;
+      transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .flower-center.grow {
+      transform: scale(1);
+    }
+
+    /* CARRUSEL 3D */
+    .carousel-container {
+      perspective: 1200px;
+      width: 100%;
+      height: 350px;
+      position: relative;
+      margin: 15px 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .carousel-3d {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      transform-style: preserve-3d;
+      transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .carousel-card {
+      position: absolute;
+      width: 190px;
+      height: 260px;
+      left: 50%;
+      top: 50%;
+      margin-left: -95px;
+      margin-top: -130px;
+      border-radius: 20px;
+      background: #ffffff;
+      box-shadow: 0 15px 30px rgba(245, 127, 23, 0.25);
+      border: 4px solid #fff59d;
+      overflow: hidden;
+      transition: all 0.5s ease;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    @media (max-width: 640px) {
+      .carousel-card {
+        width: 160px;
+        height: 220px;
+        margin-left: -80px;
+        margin-top: -110px;
+      }
+      .carousel-container {
+        height: 300px;
+      }
+    }
+
+    .carousel-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+
+    .carousel-card .card-caption {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+      color: #ffffff;
+      padding: 12px 8px 8px;
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 500;
+      line-height: 1.2;
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-center p-3 sm:p-6 relative min-h-screen">
+
+  <!-- Destellos decorativos -->
+  <div class="sparkle text-2xl sm:text-3xl top-6 left-6 text-yellow-500">✨</div>
+  <div class="sparkle text-3xl sm:text-4xl top-12 right-8 text-yellow-600" style="animation-delay: 0.5s;">🌼</div>
+  <div class="sparkle text-2xl sm:text-3xl bottom-8 left-10 text-yellow-500" style="animation-delay: 1s;">🌻</div>
+  <div class="sparkle text-3xl sm:text-4xl bottom-8 right-12 text-amber-500" style="animation-delay: 1.5s;">✨</div>
+
+  <!-- Música de fondo -->
+  <audio id="bg-music" loop preload="auto">
+    <source src="musica.mp3" type="audio/mpeg" />
+    <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3" type="audio/mpeg" />
+  </audio>
+
+  <!-- Tarjeta Principal -->
+  <main class="w-full max-w-xl bg-white/85 backdrop-blur-md border-2 border-yellow-200 rounded-3xl p-5 sm:p-8 shadow-2xl relative z-10 text-center transition-all duration-700 overflow-hidden">
+    
+    <!-- Botón de Control de Música -->
+    <button id="music-toggle" class="absolute top-4 right-4 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 p-2.5 sm:p-3 rounded-full shadow-md text-xs sm:text-sm flex items-center gap-1.5 border border-yellow-300 transition hover:scale-105 z-20" title="Música">
+      <span id="music-icon">🎵</span>
+    </button>
+
+    <!-- ETAPA 1: PROPUESTA CON EL BOTÓN JUGUETÓN RESTAURADO -->
+    <div id="stage-proposal" class="flex flex-col items-center justify-center min-h-[340px] relative">
+      <div class="animate-float text-6xl sm:text-8xl mb-3 select-none">💐🌻</div>
+      
+      <h1 class="text-3xl sm:text-5xl font-bold text-amber-800 mb-2 font-romantic tracking-wide">
+        ¿Romii aceptas mis flores amarillas?
+      </h1>
+      
+      <p class="text-yellow-900/80 text-xs sm:text-sm mb-8 max-w-xs sm:max-w-md">
+        Tengo una sorpresa preparada especialmente para ti. ¿Me concedes la alegría de recibir estas flores?
+      </p>
+
+      <!-- Zona de Botones interactiva -->
+      <div id="buttons-area" class="relative w-full h-24 flex items-center justify-center">
+        <button id="btn-yes" class="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600 text-amber-950 font-bold px-6 sm:px-8 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition duration-300 text-base sm:text-lg flex items-center gap-2 border border-yellow-200 z-10 mr-28 sm:mr-32">
+          <span>¡Sí, con todo mi colashonn !!!!</span> 💛
+        </button>
+
+        <!-- Botón "No" travieso -->
+        <button id="btn-no" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-5 py-2.5 rounded-full text-sm shadow border border-gray-300 select-none">
+          No 🙈
+        </button>
+      </div>
+    </div>
+
+    <!-- ETAPA 2: FLOR CRECIENDO PASO A PASO -->
+    <div id="stage-flower" class="hidden flex-col items-center justify-center py-4 min-h-[350px]">
+      <h2 class="text-2xl sm:text-3xl font-bold text-amber-800 font-romantic mb-1">
+        Para la niña más linda e importante en esta vida y las demás. ✨
+      </h2>
+      
+      <div class="w-full max-w-[280px] sm:max-w-[320px] my-2">
+        <svg viewBox="0 0 300 380" class="w-full h-auto drop-shadow-md">
+          <!-- Macetero -->
+          <path id="flower-pot" class="flower-pot" d="M 110,300 L 190,300 L 205,370 L 95,370 Z" fill="#D97706" stroke="#92400E" stroke-width="3"/>
+          <path id="flower-pot-top" class="flower-pot" d="M 100,290 L 200,290 L 205,300 L 95,300 Z" fill="#F59E0B" stroke="#92400E" stroke-width="3"/>
+          
+          <!-- Tallo -->
+          <path id="flower-stem" class="flower-stem" d="M 150,290 Q 145,210 150,140" fill="none" stroke="#15803D" stroke-width="10" stroke-linecap="round"/>
+
+          <!-- Hojas -->
+          <path id="leaf-left" class="flower-leaf" d="M 148,240 Q 100,220 90,200 Q 120,230 148,240" fill="#22C55E" stroke="#15803D" stroke-width="2"/>
+          <path id="leaf-right" class="flower-leaf" d="M 152,210 Q 200,190 210,170 Q 180,200 152,210" fill="#22C55E" stroke="#15803D" stroke-width="2"/>
+
+          <!-- Grupo de 16 Pétalos Anchos y Frondosos -->
+          <g id="petals-group">
+            <path class="flower-petal" style="transform-origin: 150px 140px;" d="M 150,140 C 120,80 125,25 150,20 C 175,25 180,80 150,140" fill="#FACC15" stroke="#EAB308" stroke-width="1.5"/>
+            <path class="flower-petal" style="transform-origin: 150px 140px; transform: rotate(22.5deg) scale(0);" d="M 150,140 C 120,80 125,25 150,20 C 175,25 180,80 150,140" fill="#FBBF24" stroke="#EAB308" stroke-width="1.5"/>
+            <path class="flower-petal" style="transform-origin: 150px 140px; transform: rotate(45deg) scale(0);" d="M 150,140 C 120,80 125,25 150,20 C 175,25 180,80 150,140" fill="#FACC15" stroke="#EAB308" stroke-width="1.5"/>
+            <path class="flower-petal" style="transform-origin: 150px 140px; transform: rotate(67.5deg) scale(0);" d="M 150,140 C 120,80 125,25 150,20 C 175,25 180,80 150,140" fill="#FBBF24" stroke="#EAB308" stroke-width="1.5"/>
+            <path class="flower-petal" style="transform-origin: 150px 140px; transform: rotate(90deg) scale(0);" d="M 150,140 C 120,80 125,25 150,20 C 175,25 180,80 150,140" fill="#FACC15" stroke="#EAB308" stroke-width="1.5"/>
+            <path class="flower-petal" style="transform-origin: 150px 140px; transform: rotate(112.5deg) scale(0);" d="M 150,140 C 120,80 125,25 150,20 C 175,25 180,80 150,140" fill="#FBBF24" stroke="#EAB308" stroke-width="1.5"/>
+            <path class="flower-petal" style="transform-origin: 150px 140px; transform: rotate(135deg) scale(0);" d="M 150,140 C 120,80 125,25 150,20 C 175,25 180,80 150,140" fill="#FACC15" stroke="#EAB308" stroke-width="1.5"/>
+            <path class="flower-petal" style="transform-origin: 150px 140px; transform: rotate(157.5deg) scale(0);" d="M 150,140 C 120,80 125,25 150,20 C 175,25 180,80 150,140" fill="#FBBF24" stroke="#EAB308" stroke-width="1.5"/>
+            <path class="flower-petal" style="transform-origin: 150px 140px; transform: rotate(180deg) scale(0);" d="M 150,140 C 120,80 125,25 150,20 C 175,25 180,80 150,140" fill="#FACC15" stroke="#EAB308" stroke-width="1.5"/>
+            <path class="flower-petal" style="transform-origin: 150px 140px; transform: rotate(202.5deg) scale(0);" d="M 150,140 C 120,80 125,25 150,20 C 175,25 180,80 150,140" fill="#FBBF24" stroke="#EAB308" stroke-width="1.5"/>
+            <path class="flower-petal" style="transform-origin: 150px 140px; transform: rotate(225deg) scale(0);" d="M 150,140 C 120,80 125,25 150,20 C 175,25 180,80 150,140" fill="#FACC15" stroke="#EAB308" stroke-width="1.5"/>
+            <path class="flower-petal" style="transform-origin: 150px 140px; transform: rotate(247.5deg) scale(0);" d="M 150,140 C 120,80 125,25 150,20 C 175,25 180,80 150,140" fill="#FBBF24" stroke="#EAB308" stroke-width="1.5"/>
+            <path class="flower-petal" style="transform-origin: 150px 140px; transform: rotate(270deg) scale(0);" d="M 150,140 C 120,80 125,25 150,20 C 175,25 180,80 150,140" fill="#FACC15" stroke="#EAB308" stroke-width="1.5"/>
+            <path class="flower-petal" style="transform-origin: 150px 140px; transform: rotate(292.5deg) scale(0);" d="M 150,140 C 120,80 125,25 150,20 C 175,25 180,80 150,140" fill="#FBBF24" stroke="#EAB308" stroke-width="1.5"/>
+            <path class="flower-petal" style="transform-origin: 150px 140px; transform: rotate(315deg) scale(0);" d="M 150,140 C 120,80 125,25 150,20 C 175,25 180,80 150,140" fill="#FACC15" stroke="#EAB308" stroke-width="1.5"/>
+            <path class="flower-petal" style="transform-origin: 150px 140px; transform: rotate(337.5deg) scale(0);" d="M 150,140 C 120,80 125,25 150,20 C 175,25 180,80 150,140" fill="#FBBF24" stroke="#EAB308" stroke-width="1.5"/>
+          </g>
+
+          <!-- Centro del girasol -->
+          <circle id="flower-center" class="flower-center" cx="150" cy="140" r="32" fill="#78350F" stroke="#451A03" stroke-width="3"/>
+          <circle id="flower-center-inner" class="flower-center" cx="150" cy="140" r="24" fill="#92400E" opacity="0.6"/>
+        </svg>
+      </div>
+
+      <!-- Texto Tipo Poema -->
+      <p id="flower-text" class="text-amber-900 text-sm sm:text-base font-medium italic mt-1 h-12 px-2 flex items-center justify-center"></p>
+
+      <button id="btn-to-photos" class="opacity-0 transition-opacity duration-500 mt-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-2.5 rounded-full shadow-md text-sm flex items-center gap-2 pointer-events-none">
+        <span>Ver nuestros mejores momentos</span> 📸 ➔
+      </button>
+    </div>
+
+    <!-- ETAPA 3: CARRUSEL 3D -->
+    <div id="stage-photos" class="hidden flex-col items-center">
+      <h2 class="text-3xl sm:text-5xl font-bold text-amber-700 font-romantic mb-1">
+        Pequeños momentos
+      </h2>
+      
+      <p class="text-amber-900 text-xs sm:text-sm mb-3 italic">
+        "Cada momento a tu lado es especial y bello."
+      </p>
+
+      <!-- Carrusel 3D -->
+      <div class="carousel-container">
+        <div id="carousel-3d" class="carousel-3d"></div>
+      </div>
+
+      <!-- Botones del carrusel -->
+      <div class="flex items-center gap-4 mt-2">
+        <button id="prev-btn" class="bg-yellow-200 hover:bg-yellow-300 text-amber-900 p-2.5 rounded-full shadow transition hover:scale-110">
+          ❮
+        </button>
+        <span class="text-xs font-semibold text-amber-800 tracking-wider uppercase">Toca o desliza</span>
+        <button id="next-btn" class="bg-yellow-200 hover:bg-yellow-300 text-amber-900 p-2.5 rounded-full shadow transition hover:scale-110">
+          ❯
+        </button>
+      </div>
+
+      <div class="mt-6 pt-3 border-t border-yellow-200 text-amber-900/90 text-xs sm:text-sm font-medium">
+        Siempre juntos 💛✨
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // Elementos del DOM
+    const btnNo = document.getElementById('btn-no');
+    const btnYes = document.getElementById('btn-yes');
+    const stageProposal = document.getElementById('stage-proposal');
+    const stageFlower = document.getElementById('stage-flower');
+    const stagePhotos = document.getElementById('stage-photos');
+    const bgMusic = document.getElementById('bg-music');
+    const musicToggle = document.getElementById('music-toggle');
+    const musicIcon = document.getElementById('music-icon');
+    const carousel3d = document.getElementById('carousel-3d');
+    const flowerText = document.getElementById('flower-text');
+    const btnToPhotos = document.getElementById('btn-to-photos');
+
+    let isMusicPlaying = false;
+    let currentAngle = 0;
+    let autoRotateTimer = null;
+
+    // FRASES ROMÁNTICAS Y FOTOS
+    const photosList = [
+      { 
+        url: 'foto1.jpg.jpeg', 
+        caption: 'En la inmensidad del mundo, haberte encontrado es mi mayor fortuna.' 
+      },
+      { 
+        url: 'foto2.jpg.jpeg', 
+        caption: 'Hasta la flor más bella envidia la luz que proyectas al sonreír.' 
+      },
+      { 
+        url: 'foto3.jpg.jpeg', 
+        caption: 'Entre risas y complicidad, eres y serás siempre mi lugar seguro.' 
+      },
+      { 
+        url: 'foto4.jpg.jpeg', 
+        caption: 'Tu miradita y esa ternura tuya son mi refugio favorito en el universo.' 
+      },
+      { 
+        url: 'foto5.jpg.jpeg', 
+        caption: 'Amar cada una de tus locuras es la aventura más bonita de mi vida.' 
+      },
+      { 
+        url: 'foto6.jpg.jpeg', 
+        caption: 'Contigo el tiempo se detiene y cada instante se vuelve eterno.' 
+      }
+    ];
+
+    // LÓGICA DEL BOTÓN "NO" TRAVIESO (ESCAPISTA Y JUGUETÓN)
+    function moveNoButton() {
+      const container = document.getElementById('buttons-area');
+      const containerRect = container.getBoundingClientRect();
+      const btnRect = btnNo.getBoundingClientRect();
+
+      // Generar una nueva posición calculada de forma segura dentro del contorno
+      const maxX = (containerRect.width / 2) - (btnRect.width / 2) - 10;
+      const maxY = (containerRect.height / 2) - (btnRect.height / 2) - 5;
+
+      const randomX = (Math.random() * (maxX * 2)) - maxX;
+      const randomY = (Math.random() * (maxY * 2)) - maxY;
+
+      btnNo.style.transform = `translate(${randomX}px, ${randomY}px)`;
+    }
+
+    // Eventos para esquivar el ratón o los toques en pantalla móvil
+    btnNo.addEventListener('mouseenter', moveNoButton);
+    btnNo.addEventListener('mouseover', moveNoButton);
+    btnNo.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      moveNoButton();
+    });
+    btnNo.addEventListener('click', (e) => {
+      e.preventDefault();
+      moveNoButton();
+    });
+
+    // MÚSICA DE FONDO
+    function playMusic() {
+      bgMusic.play().then(() => {
+        isMusicPlaying = true;
+        musicIcon.textContent = '🔊';
+      }).catch((err) => {
+        console.log("Audio esperando interacción del usuario", err);
+      });
+    }
+
+    musicToggle.addEventListener('click', () => {
+      if (isMusicPlaying) {
+        bgMusic.pause();
+        isMusicPlaying = false;
+        musicIcon.textContent = '🔇';
+      } else {
+        playMusic();
+      }
+    });
+
+    // BOTÓN "SÍ" -> INICIA ANIMACIÓN DE LA FLOR
+    btnYes.addEventListener('click', () => {
+      playMusic();
+
+      stageProposal.style.opacity = '0';
+      setTimeout(() => {
+        stageProposal.style.display = 'none';
+        stageFlower.classList.remove('hidden');
+        stageFlower.classList.add('flex');
+
+        animateFlowerSequence();
+      }, 400);
+    });
+
+    // SECUENCIA DE ANIMACIÓN PASO A PASO
+    function animateFlowerSequence() {
+      const pot = document.getElementById('flower-pot');
+      const potTop = document.getElementById('flower-pot-top');
+      const stem = document.getElementById('flower-stem');
+      const leafLeft = document.getElementById('leaf-left');
+      const leafRight = document.getElementById('leaf-right');
+      const petals = document.querySelectorAll('.flower-petal');
+      const center = document.getElementById('flower-center');
+      const centerInner = document.getElementById('flower-center-inner');
+
+      // 1. Aparece el macetero
+      setTimeout(() => {
+        pot.classList.add('grow');
+        potTop.classList.add('grow');
+      }, 200);
+
+      // 2. Crece el tallo
+      setTimeout(() => {
+        stem.classList.add('grow');
+      }, 800);
+
+      // 3. Nacen las hojas
+      setTimeout(() => {
+        leafLeft.classList.add('grow');
+        leafRight.classList.add('grow');
+      }, 1800);
+
+      // 4. Brotan los pétalos uno por uno en forma circular
+      const petalsStartTime = 2500;
+      petals.forEach((petal, index) => {
+        setTimeout(() => {
+          const rotationAngle = index * 22.5;
+          petal.style.transform = `rotate(${rotationAngle}deg) scale(1)`;
+        }, petalsStartTime + (index * 110));
+      });
+
+      // 5. Nace el centro tras florecer todos los pétalos
+      const centerStartTime = petalsStartTime + (petals.length * 110) + 200;
+      setTimeout(() => {
+        center.classList.add('grow');
+        centerInner.classList.add('grow');
+        triggerFlowerExplosion();
+      }, centerStartTime);
+
+      // 6. Escribir Poema y mostrar botón a las fotos
+      setTimeout(() => {
+        typeWriterEffect("Como un girasol busca el sol, yo siempre buscaré tu sonrisa <3 ", () => {
+          btnToPhotos.classList.remove('opacity-0', 'pointer-events-none');
+        });
+      }, centerStartTime + 800);
+    }
+
+    // EFECTO MÁQUINA DE ESCRIBIR
+    function typeWriterEffect(text, callback) {
+      flowerText.textContent = '';
+      let i = 0;
+      const speed = 40;
+
+      function type() {
+        if (i < text.length) {
+          flowerText.textContent += text.charAt(i);
+          i++;
+          setTimeout(type, speed);
+        } else if (callback) {
+          callback();
+        }
+      }
+      type();
+    }
+
+    // PASO A LA ETAPA 3: FOTOS Y CARRUSEL
+    btnToPhotos.addEventListener('click', () => {
+      stageFlower.style.opacity = '0';
+      setTimeout(() => {
+        stageFlower.style.display = 'none';
+        stagePhotos.classList.remove('hidden');
+        stagePhotos.classList.add('flex');
+
+        renderCarouselCards();
+        startAutoRotation();
+      }, 400);
+    });
+
+    // RENDERIZAR CARRUSEL 3D
+    function renderCarouselCards() {
+      carousel3d.innerHTML = '';
+      const totalCards = photosList.length;
+      const isMobile = window.innerWidth < 640;
+      const radius = isMobile ? 240 : 310;
+
+      photosList.forEach((photo, index) => {
+        const card = document.createElement('div');
+        card.className = 'carousel-card';
+        
+        const angle = (360 / totalCards) * index;
+        card.style.transform = `rotateY(${angle}deg) translateZ(${radius}px)`;
+
+        card.innerHTML = `
+          <img src="${photo.url}" alt="Foto ${index+1}" onerror="this.src='https://placehold.co/600x800/fff176/5d4037?text=Foto+${index+1}'" />
+          <div class="card-caption">${photo.caption}</div>
+        `;
+
+        card.addEventListener('click', () => {
+          currentAngle = -angle;
+          updateCarouselRotation();
+          resetAutoRotation();
+        });
+
+        carousel3d.appendChild(card);
+      });
+
+      updateCarouselRotation();
+    }
+
+    function updateCarouselRotation() {
+      carousel3d.style.transform = `rotateY(${currentAngle}deg)`;
+    }
+
+    function startAutoRotation() {
+      if (autoRotateTimer) clearInterval(autoRotateTimer);
+      autoRotateTimer = setInterval(() => {
+        currentAngle -= (360 / photosList.length);
+        updateCarouselRotation();
+      }, 3500);
+    }
+
+    function resetAutoRotation() {
+      startAutoRotation();
+    }
+
+    document.getElementById('next-btn').addEventListener('click', () => {
+      currentAngle -= (360 / photosList.length);
+      updateCarouselRotation();
+      resetAutoRotation();
+    });
+
+    document.getElementById('prev-btn').addEventListener('click', () => {
+      currentAngle += (360 / photosList.length);
+      updateCarouselRotation();
+      resetAutoRotation();
+    });
+
+    // CONFETI DE PÉTALOS
+    function triggerFlowerExplosion() {
+      const duration = 3 * 1000;
+      const animationEnd = Date.now() + duration;
+
+      const interval = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+        if (timeLeft <= 0) return clearInterval(interval);
+
+        const particleCount = 40 * (timeLeft / duration);
+
+        confetti({
+          particleCount,
+          startVelocity: 30,
+          spread: 360,
+          ticks: 60,
+          origin: { x: Math.random(), y: Math.random() - 0.2 },
+          colors: ['#fbc02d', '#fff176', '#ffee58', '#ffffff', '#f57f17'],
+          shapes: ['circle'],
+          scalar: 1.2
+        });
+      }, 200);
+    }
+  </script>
+</body>
+</html>
